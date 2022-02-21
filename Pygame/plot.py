@@ -1,20 +1,24 @@
 import pygame
 
-GAME_HEIGHT = 500
-GAME_WIDTH = 500
-TILE_SIZE = 25
+GAME_HEIGHT = 800
+GAME_WIDTH = 800
+TILE_SIZE = 20
 COLS = int(GAME_WIDTH / TILE_SIZE)
 ROWS = int(GAME_HEIGHT / TILE_SIZE)
 
 pygame.init()
-
 screen = pygame.display.set_mode([GAME_HEIGHT, GAME_WIDTH])
 
 pygame.display.set_caption('Python Snake')
 
 clock = pygame.time.Clock()
-speed = 5
+speed = 10
 running = True
+
+
+class SnakePart:
+    def __init__(self, start_x, start_y):
+        self.rect = pygame.Rect(start_x, start_y)
 
 
 # Objects
@@ -22,6 +26,7 @@ running = True
 class SnakeHead:
     def __init__(self, start_x, start_y, direction="right"):
         self.alive = True
+        self.parts = []
 
         self.rect = pygame.Rect(start_x, start_y, TILE_SIZE, TILE_SIZE)
         self.direction = direction
@@ -50,11 +55,13 @@ class SnakeHead:
                 self.alive = False
                 x -= TILE_SIZE
             elif x < 0:
+                x += TILE_SIZE
                 self.alive = False
             elif y + TILE_SIZE > GAME_HEIGHT:
                 y -= TILE_SIZE
                 self.alive = False
             elif y < 0:
+                y += TILE_SIZE
                 self.alive = False
 
             self.rect.update((x, y), (TILE_SIZE, TILE_SIZE))
