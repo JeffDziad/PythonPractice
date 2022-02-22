@@ -1,10 +1,12 @@
 import pygame
+from random import randrange
 
 GAME_HEIGHT = 800
 GAME_WIDTH = 800
-TILE_SIZE = 20
+TILE_SIZE = 25
 COLS = int(GAME_WIDTH / TILE_SIZE)
 ROWS = int(GAME_HEIGHT / TILE_SIZE)
+APPLE_LIMIT = 2
 
 pygame.init()
 screen = pygame.display.set_mode([GAME_HEIGHT, GAME_WIDTH])
@@ -16,14 +18,21 @@ speed = 10
 running = True
 
 
-class SnakePart:
+# Objects
+class Apple:
+    def __init__(self):
+        self.position = randSpawnPos()
+
+    def draw(self):
+        pygame.draw.circle(screen, "red", (self.position[0] - TILE_SIZE / 2, self.position[1] - TILE_SIZE / 2), TILE_SIZE / 2)
+
+
+class Part:
     def __init__(self, start_x, start_y):
         self.rect = pygame.Rect(start_x, start_y)
 
 
-# Objects
-# Head
-class SnakeHead:
+class Snake:
     def __init__(self, start_x, start_y, direction="right"):
         self.alive = True
         self.parts = []
@@ -36,21 +45,19 @@ class SnakeHead:
 
     def update(self):
         if self.alive:
+            # Determine next position
             d = self.direction
-            x, y = 0, 0
+            x, y = self.rect.x, self.rect.y
             if d == "up":
-                x = self.rect.x
-                y = self.rect.y - TILE_SIZE
+                y -= TILE_SIZE
             elif d == "down":
-                x = self.rect.x
-                y = self.rect.y + TILE_SIZE
+                y += TILE_SIZE
             elif d == "left":
-                x = self.rect.x - TILE_SIZE
-                y = self.rect.y
+                x -= TILE_SIZE
             elif d == "right":
-                x = self.rect.x + TILE_SIZE
-                y = self.rect.y
+                x += TILE_SIZE
 
+            # Test new position for collisions
             if x + TILE_SIZE > GAME_WIDTH:
                 self.alive = False
                 x -= TILE_SIZE
@@ -64,8 +71,35 @@ class SnakeHead:
                 y += TILE_SIZE
                 self.alive = False
 
+            # Apply new position
             self.rect.update((x, y), (TILE_SIZE, TILE_SIZE))
+
+            # After update, check for apple collisions
+            for apple in apples:
+                if self.rect.x == apple.position[0] and self.rect.y == apple.position[1]:
+                    print("Apple Collision")
         self.draw()
+
+
+head = Snake(int((COLS / 2) * TILE_SIZE), int((ROWS / 2) * TILE_SIZE))
+apples = []
+
+
+def randSpawnPos():
+    x, y = 0, 0
+    found = False
+    while not found:
+        found = True
+        (x, y) = round(randrange(0, COLS)) * TILE_SIZE, round(randrange(0, ROWS)) * TILE_SIZE
+        if head.rect.x == x or head.rect.y == y:
+            print("Head Convergence")
+            found = False
+        for apple in apples:
+            if apple.position == (x, y):
+                print("Apple Convergence")
+                found = False
+    # Test position for collisions to prevent overlap
+    return x, y
 
 
 def drawGrid():
@@ -83,13 +117,21 @@ def drawGrid():
         pygame.draw.line(screen, "black", (x1, y1), (x2, y2))
 
 
-head = SnakeHead(int((COLS / 2) * TILE_SIZE), int((ROWS / 2) * TILE_SIZE))
+def handleApples():
+    if len(apples) < APPLE_LIMIT:
+        for x in range(0, APPLE_LIMIT - len(apples)):
+            a = Apple()
+            print(a.position)
+            apples.append(a)
+    for apple in apples:
+        apple.draw()
 
 
 def updateGame():
     screen.fill((255, 255, 255))
     drawGrid()
     head.update()
+    handleApples()
 
 
 while running:
